@@ -2,5 +2,6 @@ install:
   - cinst nodejs -x86
   - cinst python -Version 2.7.2 -x86
 build_script:
+  - cmd: script\bootstrap-windows.cmd
   - cmd: script\bootstrap.cmd
   
