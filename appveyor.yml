@@ -4,7 +4,6 @@ install:
   - cinst 7zip.commandLine
   - cinst python -Version 2.7.2 -x86
   - cmd: script\grab-cache.cmd
-before_build: 
   - cmd: script\cache-deps.cmd
 build_script:
   - cmd: script\bootstrap.cmd
