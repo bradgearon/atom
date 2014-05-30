@@ -15,7 +15,8 @@ Atom will automatically update when a new release is available.
 * [Linux](docs/build-instructions/linux.md)
 * [OS X](docs/build-instructions/os-x.md)
 * [FreeBSD](docs/build-instructions/freebsd.md)
-* [Windows](docs/build-instructions/windows.md)
+* [Windows](docs/build-instructions/windows.md) 
+  [![Build status](https://ci.appveyor.com/api/projects/status/h49a1m8ecy772af8)](https://ci.appveyor.com/project/bradgearon/atom)
 
 ## Developing
 Check out the [guides](https://atom.io/docs/latest) and the [API reference](https://atom.io/docs/api).
