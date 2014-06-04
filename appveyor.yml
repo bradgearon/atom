@@ -4,4 +4,5 @@ install:
   - cinst python -Version 2.7.2 -x86
 build_script:
   - cmd: set NODE_ENV=production
+  - cmd: script\grab-cache.cmd
   - cmd: script\bootstrap.cmd
