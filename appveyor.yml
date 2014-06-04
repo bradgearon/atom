@@ -1,9 +1,7 @@
 install:
   - cinst wget
   - cinst nodejs -x86
-  - cinst 7zip.commandLine
   - cinst python -Version 2.7.2 -x86
-before_build:
-  - cmd: script\grab-cache.cmd
 build_script:
+  - cmd: set NODE_ENV=production
   - cmd: script\bootstrap.cmd
