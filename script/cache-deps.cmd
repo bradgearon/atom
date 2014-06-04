@@ -1,2 +1,1 @@
-set cacheDir=node_modules
-for /f "delims=;" %%f in ('dir /b %cacheDir%') do npm cache add %cacheDir%\%%f
+for /f "delims=;" %%f in ('dir /b node_modules') do npm cache add node_modules\%%f
