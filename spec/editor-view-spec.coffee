@@ -33,10 +33,10 @@ describe "EditorView", ->
         $('#jasmine-content').append(this)
 
     waitsForPromise ->
-      atom.packages.activatePackage('language-text', sync: true)
+      atom.packages.activatePackage('language-text')
 
     waitsForPromise ->
-      atom.packages.activatePackage('language-javascript', sync: true)
+      atom.packages.activatePackage('language-javascript')
 
   getLineHeight = ->
     return cachedLineHeight if cachedLineHeight?
@@ -1803,6 +1803,13 @@ describe "EditorView", ->
           expect(editorView.renderedLines.find('.line:eq(10) .indent-guide').text()).toBe "#{eol}   "
           expect(editorView.renderedLines.find('.line:eq(10) .invisible-character').text()).toBe eol
 
+    describe "when editor.showIndentGuide is set to false", ->
+      it "does not render the indent guide on whitespace only lines (regression)", ->
+        editorView.attachToDom()
+        editor.setText('    ')
+        atom.config.set('editor.showIndentGuide', false)
+        expect(editorView.renderedLines.find('.line:eq(0) .indent-guide').length).toBe 0
+
   describe "when soft-wrap is enabled", ->
     beforeEach ->
       jasmine.unspy(window, 'setTimeout')
@@ -2406,19 +2413,20 @@ describe "EditorView", ->
       expect(editorView.getFirstVisibleScreenRow()).toBe(0)
 
   describe ".checkoutHead()", ->
-    [filePath, originalPathText] = []
+    [filePath] = []
 
     beforeEach ->
-      filePath = atom.project.resolve('git/working-dir/file.txt')
-      originalPathText = fs.readFileSync(filePath, 'utf8')
+      workingDirPath = temp.mkdirSync('atom-working-dir')
+      fs.copySync(path.join(__dirname, 'fixtures', 'git', 'working-dir'), workingDirPath)
+      fs.renameSync(path.join(workingDirPath, 'git.git'), path.join(workingDirPath, '.git'))
+      atom.project.setPath(workingDirPath)
+      filePath = atom.project.resolve('file.txt')
+
       waitsForPromise ->
         atom.workspace.open(filePath).then (o) -> editor = o
 
       runs ->
         editorView.edit(editor)
-
-    afterEach ->
-      fs.writeFileSync(filePath, originalPathText)
 
     it "restores the contents of the editor view to the HEAD revision", ->
       editor.setText('')
@@ -2433,7 +2441,7 @@ describe "EditorView", ->
         fileChangeHandler.callCount > 0
 
       runs ->
-        expect(editor.getText()).toBe(originalPathText)
+        expect(editor.getText()).toBe('undefined')
 
   describe ".pixelPositionForBufferPosition(position)", ->
     describe "when the editor view is detached", ->

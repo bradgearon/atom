@@ -144,12 +144,13 @@ class Editor extends Model
   cursors: null
   selections: null
   suppressSelectionMerging: false
+  updateBatchDepth: 0
 
   @delegatesMethods 'suggestedIndentForBufferRow', 'autoIndentBufferRow', 'autoIndentBufferRows',
     'autoDecreaseIndentForBufferRow', 'toggleLineCommentForBufferRow', 'toggleLineCommentsForBufferRows',
     toProperty: 'languageMode'
 
-  @delegatesProperties '$lineHeight', '$defaultCharWidth', '$height', '$width',
+  @delegatesProperties '$lineHeightInPixels', '$defaultCharWidth', '$height', '$width',
     '$scrollTop', '$scrollLeft', 'manageScrollPosition', toProperty: 'displayBuffer'
 
   constructor: ({@softTabs, initialLine, initialColumn, tabLength, softWrap, @displayBuffer, buffer, registerEditor, suppressCursorCreation}) ->
@@ -211,6 +212,7 @@ class Editor extends Model
     @subscribe @displayBuffer, "changed", (e) => @emit 'screen-lines-changed', e
     @subscribe @displayBuffer, "markers-updated", => @mergeIntersectingSelections()
     @subscribe @displayBuffer, 'grammar-changed', => @handleGrammarChange()
+    @subscribe @displayBuffer, 'tokenized', => @handleTokenization()
     @subscribe @displayBuffer, 'soft-wrap-changed', (args...) => @emit 'soft-wrap-changed', args...
 
   getViewClass: ->
@@ -259,7 +261,8 @@ class Editor extends Model
   getLongTitle: ->
     if sessionPath = @getPath()
       fileName = path.basename(sessionPath)
-      directory = path.basename(path.dirname(sessionPath))
+      directory = atom.project.relativize(path.dirname(sessionPath))
+      directory = if directory.length > 0 then directory else path.basename(path.dirname(sessionPath))
       "#{fileName} - #{directory}"
     else
       'untitled'
@@ -1269,6 +1272,9 @@ class Editor extends Model
   # Returns: An {Array} of {Selection}s.
   getSelections: -> new Array(@selections...)
 
+  selectionsForScreenRows: (startRow, endRow) ->
+    @getSelections().filter (selection) -> selection.intersectsScreenRowRange(startRow, endRow)
+
   # Public: Get the most recent {Selection} or the selection at the given
   # index.
   #
@@ -1484,6 +1490,14 @@ class Editor extends Model
   # Public: Move every cursor to the next word boundary.
   moveCursorToNextWordBoundary: ->
     @moveCursors (cursor) -> cursor.moveToNextWordBoundary()
+
+  # Public: Move every cursor to the beginning of the next paragraph.
+  moveCursorToBeginningOfNextParagraph: ->
+    @moveCursors (cursor) -> cursor.moveToBeginningOfNextParagraph()
+
+  # Public: Move every cursor to the beginning of the previous paragraph.
+  moveCursorToBeginningOfPreviousParagraph: ->
+    @moveCursors (cursor) -> cursor.moveToBeginningOfPreviousParagraph()
 
   scrollToCursorPosition: ->
     @getCursor().autoscroll()
@@ -1829,15 +1843,20 @@ class Editor extends Model
   abortTransaction: -> @buffer.abortTransaction()
 
   batchUpdates: (fn) ->
-    @emit 'batched-updates-started'
+    @emit 'batched-updates-started' if @updateBatchDepth is 0
+    @updateBatchDepth++
     result = fn()
-    @emit 'batched-updates-ended'
+    @updateBatchDepth--
+    @emit 'batched-updates-ended' if @updateBatchDepth is 0
     result
 
   inspect: ->
     "<Editor #{@id}>"
 
   logScreenLines: (start, end) -> @displayBuffer.logLines(start, end)
+
+  handleTokenization: ->
+    @softTabs = @usesSoftTabs() ? @softTabs
 
   handleGrammarChange: ->
     @unfoldAll()
@@ -1856,8 +1875,8 @@ class Editor extends Model
   getHorizontalScrollMargin: -> @displayBuffer.getHorizontalScrollMargin()
   setHorizontalScrollMargin: (horizontalScrollMargin) -> @displayBuffer.setHorizontalScrollMargin(horizontalScrollMargin)
 
-  getLineHeight: -> @displayBuffer.getLineHeight()
-  setLineHeight: (lineHeight) -> @displayBuffer.setLineHeight(lineHeight)
+  getLineHeightInPixels: -> @displayBuffer.getLineHeightInPixels()
+  setLineHeightInPixels: (lineHeightInPixels) -> @displayBuffer.setLineHeightInPixels(lineHeightInPixels)
 
   getScopedCharWidth: (scopeNames, char) -> @displayBuffer.getScopedCharWidth(scopeNames, char)
   setScopedCharWidth: (scopeNames, char, width) -> @displayBuffer.setScopedCharWidth(scopeNames, char, width)

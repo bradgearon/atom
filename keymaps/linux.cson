@@ -1,13 +1,14 @@
 'body':
   # Atom Specific
   'enter': 'core:confirm'
+  'num-enter': 'core:confirm'
   'escape': 'core:cancel'
   'up': 'core:move-up'
   'down': 'core:move-down'
   'left': 'core:move-left'
   'right': 'core:move-right'
   'ctrl-alt-r': 'window:reload'
-  'ctrl-alt-i': 'window:toggle-dev-tools'
+  'ctrl-shift-i': 'window:toggle-dev-tools'
   'ctrl-alt-p': 'window:run-package-specs'
   'ctrl-alt-s': 'application:run-all-specs'
   'ctrl-shift-o': 'application:open-dev'
@@ -33,9 +34,11 @@
   'shift-left': 'core:select-left'
   'shift-right': 'core:select-right'
   'delete': 'core:delete'
+  'shift-delete': 'core:delete'
   'pageup': 'core:page-up'
   'pagedown': 'core:page-down'
   'backspace': 'core:backspace'
+  'shift-backspace': 'core:backspace'
   'ctrl-tab': 'pane:show-next-item'
   'ctrl-shift-tab': 'pane:show-previous-item'
   'ctrl-shift-up': 'core:move-up'
@@ -69,8 +72,8 @@
   'ctrl-delete': 'editor:delete-to-end-of-word'
   'ctrl-home': 'core:move-to-top'
   'ctrl-end': 'core:move-to-bottom'
-  'cmd-shift-home': 'core:select-to-top'
-  'cmd-shift-end': 'core:select-to-bottom'
+  'ctrl-shift-home': 'core:select-to-top'
+  'ctrl-shift-end': 'core:select-to-bottom'
 
   # Sublime Parity
   'ctrl-a': 'core:select-all'

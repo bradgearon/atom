@@ -74,7 +74,7 @@ class Project extends Model
     if projectPath?
       directory = if fs.isDirectorySync(projectPath) then projectPath else path.dirname(projectPath)
       @rootDirectory = new Directory(directory)
-      if @repo = Git.open(projectPath, project: this)
+      if @repo = Git.open(directory, project: this)
         @repo.refreshIndex()
         @repo.refreshStatus()
     else
@@ -99,8 +99,12 @@ class Project extends Model
     if uri?.match(/[A-Za-z0-9+-.]+:\/\//) # leave path alone if it has a scheme
       uri
     else
-      uri = path.join(@getPath(), uri) unless fs.isAbsolute(uri)
-      fs.absolute(uri)
+      if fs.isAbsolute(uri)
+        fs.absolute(uri)
+      else if projectPath = @getPath()
+        fs.absolute(path.join(projectPath, uri))
+      else
+        undefined
 
   # Public: Make the given path relative to the project directory.
   relativize: (fullPath) ->

@@ -23,7 +23,7 @@ class DisplayBuffer extends Model
     manageScrollPosition: false
     softWrap: null
     editorWidthInChars: null
-    lineHeight: null
+    lineHeightInPixels: null
     defaultCharWidth: null
     height: null
     width: null
@@ -46,6 +46,7 @@ class DisplayBuffer extends Model
     @updateAllScreenLines()
     @createFoldForMarker(marker) for marker in @buffer.findMarkers(@getFoldMarkerAttributes())
     @subscribe @tokenizedBuffer, 'grammar-changed', (grammar) => @emit 'grammar-changed', grammar
+    @subscribe @tokenizedBuffer, 'tokenized', => @emit 'tokenized'
     @subscribe @tokenizedBuffer, 'changed', @handleTokenizedBufferChange
     @subscribe @buffer, 'markers-updated', @handleBufferMarkersUpdated
     @subscribe @buffer, 'marker-created', @handleBufferMarkerCreated
@@ -198,8 +199,8 @@ class DisplayBuffer extends Model
     @setScrollLeft(scrollRight - @width)
     @getScrollRight()
 
-  getLineHeight: -> @lineHeight
-  setLineHeight: (@lineHeight) -> @lineHeight
+  getLineHeightInPixels: -> @lineHeightInPixels
+  setLineHeightInPixels: (@lineHeightInPixels) -> @lineHeightInPixels
 
   getDefaultCharWidth: -> @defaultCharWidth
   setDefaultCharWidth: (@defaultCharWidth) -> @defaultCharWidth
@@ -227,21 +228,22 @@ class DisplayBuffer extends Model
     @charWidthsByScope = {}
 
   getScrollHeight: ->
-    unless @getLineHeight() > 0
-      throw new Error("You must assign lineHeight before calling ::getScrollHeight()")
+    unless @getLineHeightInPixels() > 0
+      throw new Error("You must assign lineHeightInPixels before calling ::getScrollHeight()")
 
-    @getLineCount() * @getLineHeight()
+    @getLineCount() * @getLineHeightInPixels()
 
   getScrollWidth: ->
     (@getMaxLineLength() * @getDefaultCharWidth()) + @getCursorWidth()
 
   getVisibleRowRange: ->
-    unless @getLineHeight() > 0
-      throw new Error("You must assign a non-zero lineHeight before calling ::getVisibleRowRange()")
+    unless @getLineHeightInPixels() > 0
+      throw new Error("You must assign a non-zero lineHeightInPixels before calling ::getVisibleRowRange()")
 
-    heightInLines = Math.ceil(@getHeight() / @getLineHeight()) + 1
-    startRow = Math.floor(@getScrollTop() / @getLineHeight())
-    endRow = Math.min(@getLineCount(), Math.ceil(startRow + heightInLines))
+    heightInLines = Math.ceil(@getHeight() / @getLineHeightInPixels()) + 1
+    startRow = Math.floor(@getScrollTop() / @getLineHeightInPixels())
+    endRow = Math.min(@getLineCount(), startRow + heightInLines)
+
     [startRow, endRow]
 
   intersectsVisibleRowRange: (startRow, endRow) ->
@@ -253,7 +255,7 @@ class DisplayBuffer extends Model
     @intersectsVisibleRowRange(start.row, end.row + 1)
 
   scrollToScreenRange: (screenRange) ->
-    verticalScrollMarginInPixels = @getVerticalScrollMargin() * @getLineHeight()
+    verticalScrollMarginInPixels = @getVerticalScrollMargin() * @getLineHeightInPixels()
     horizontalScrollMarginInPixels = @getHorizontalScrollMargin() * @getDefaultCharWidth()
 
     {top, left, height, width} = @pixelRectForScreenRange(screenRange)
@@ -284,11 +286,11 @@ class DisplayBuffer extends Model
     if screenRange.end.row > screenRange.start.row
       top = @pixelPositionForScreenPosition(screenRange.start).top
       left = 0
-      height = (screenRange.end.row - screenRange.start.row + 1) * @getLineHeight()
+      height = (screenRange.end.row - screenRange.start.row + 1) * @getLineHeightInPixels()
       width = @getScrollWidth()
     else
       {top, left} = @pixelPositionForScreenPosition(screenRange.start)
-      height = @getLineHeight()
+      height = @getLineHeightInPixels()
       width = @pixelPositionForScreenPosition(screenRange.end).left - left
 
     {top, left, width, height}
@@ -511,7 +513,7 @@ class DisplayBuffer extends Model
     targetColumn = screenPosition.column
     defaultCharWidth = @defaultCharWidth
 
-    top = targetRow * @lineHeight
+    top = targetRow * @lineHeightInPixels
     left = 0
     column = 0
     for token in @lineForRow(targetRow).tokens
@@ -526,7 +528,7 @@ class DisplayBuffer extends Model
     targetTop = pixelPosition.top
     targetLeft = pixelPosition.left
     defaultCharWidth = @defaultCharWidth
-    row = Math.floor(targetTop / @getLineHeight())
+    row = Math.floor(targetTop / @getLineHeightInPixels())
     row = Math.min(row, @getLastRow())
     row = Math.max(0, row)
 

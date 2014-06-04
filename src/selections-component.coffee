@@ -1,5 +1,6 @@
-React = require 'react'
-{div} = require 'reactionary'
+React = require 'react-atom-fork'
+{div} = require 'reactionary-atom-fork'
+{isEqualForProperties} = require 'underscore-plus'
 SelectionComponent = require './selection-component'
 
 module.exports =
@@ -7,10 +8,18 @@ SelectionsComponent = React.createClass
   displayName: 'SelectionsComponent'
 
   render: ->
-    {editor} = @props
+    div className: 'selections', @renderSelections()
 
-    div className: 'selections',
-      if @isMounted()
-        for selection in editor.getSelections()
-          if not selection.isEmpty() and editor.selectionIntersectsVisibleRowRange(selection)
-            SelectionComponent({key: selection.id, selection})
+  renderSelections: ->
+    {editor, selectionScreenRanges, lineHeightInPixels} = @props
+
+    selectionComponents = []
+    for selectionId, screenRange of selectionScreenRanges
+      selectionComponents.push(SelectionComponent({key: selectionId, screenRange, editor, lineHeightInPixels}))
+    selectionComponents
+
+  componentWillMount: ->
+    @selectionRanges = {}
+
+  shouldComponentUpdate: (newProps) ->
+    not isEqualForProperties(newProps, @props, 'selectionScreenRanges', 'lineHeightInPixels', 'defaultCharWidth')

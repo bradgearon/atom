@@ -1,9 +1,8 @@
-React = require 'react'
-{div} = require 'reactionary'
-{debounce} = require 'underscore-plus'
+React = require 'react-atom-fork'
+{div} = require 'reactionary-atom-fork'
+{debounce, toArray, isEqualForProperties, isEqual} = require 'underscore-plus'
 SubscriberMixin = require './subscriber-mixin'
 CursorComponent = require './cursor-component'
-
 
 module.exports =
 CursorsComponent = React.createClass
@@ -13,38 +12,46 @@ CursorsComponent = React.createClass
   cursorBlinkIntervalHandle: null
 
   render: ->
-    {editor} = @props
-    blinkOff = @state.blinkCursorsOff
+    {editor, cursorScreenRanges, scrollTop, scrollLeft} = @props
+    {blinkOff} = @state
 
-    div className: 'cursors',
+    className = 'cursors'
+    className += ' blink-off' if blinkOff
+
+    div {className},
       if @isMounted()
-        for selection in editor.getSelections()
-          if selection.isEmpty() and editor.selectionIntersectsVisibleRowRange(selection)
-            {cursor} = selection
-            CursorComponent({key: cursor.id, cursor, blinkOff})
+        for key, screenRange of cursorScreenRanges
+          CursorComponent({key, editor, screenRange, scrollTop, scrollLeft})
 
   getInitialState: ->
-    blinkCursorsOff: false
+    blinkOff: false
 
   componentDidMount: ->
-    {editor} = @props
     @startBlinkingCursors()
 
   componentWillUnmount: ->
-    clearInterval(@cursorBlinkIntervalHandle)
+    @stopBlinkingCursors()
 
-  componentWillUpdate: ({cursorsMoved}) ->
-    @pauseCursorBlinking() if cursorsMoved
+  shouldComponentUpdate: (newProps, newState) ->
+    not newState.blinkOff is @state.blinkOff or
+      not isEqualForProperties(newProps, @props, 'cursorScreenRanges', 'scrollTop', 'scrollLeft', 'lineHeightInPixels', 'defaultCharWidth')
+
+  componentWillUpdate: (newProps) ->
+    @pauseCursorBlinking() if @props.cursorScreenRanges and not isEqual(newProps.cursorScreenRanges, @props.cursorScreenRanges)
 
   startBlinkingCursors: ->
-    @cursorBlinkIntervalHandle = setInterval(@toggleCursorBlink, @props.cursorBlinkPeriod / 2)
+    @toggleCursorBlinkHandle = setInterval(@toggleCursorBlink, @props.cursorBlinkPeriod / 2) if @isMounted()
 
   startBlinkingCursorsAfterDelay: null # Created lazily
 
-  toggleCursorBlink: -> @setState(blinkCursorsOff: not @state.blinkCursorsOff)
+  stopBlinkingCursors: ->
+    clearInterval(@toggleCursorBlinkHandle)
+
+  toggleCursorBlink: ->
+    @setState(blinkOff: not @state.blinkOff)
 
   pauseCursorBlinking: ->
-    @state.blinkCursorsOff = false
-    clearInterval(@cursorBlinkIntervalHandle)
+    @state.blinkOff = false
+    @stopBlinkingCursors()
     @startBlinkingCursorsAfterDelay ?= debounce(@startBlinkingCursors, @props.cursorBlinkResumeDelay)
     @startBlinkingCursorsAfterDelay()

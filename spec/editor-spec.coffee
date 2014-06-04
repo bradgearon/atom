@@ -622,6 +622,38 @@ describe "Editor", ->
         editor.moveCursorToBeginningOfNextWord()
         expect(editor.getCursorBufferPosition()).toEqual [11, 9]
 
+    describe ".moveCursorToBeginningOfNextParagraph()", ->
+      it "moves the cursor before the first line of the next paragraph", ->
+        editor.setCursorBufferPosition [0,6]
+        cursor = editor.getCursor()
+
+        editor.moveCursorToBeginningOfNextParagraph()
+
+        expect(cursor.getBufferPosition()).toEqual  { row : 10, column : 0 }
+
+        editor.setText("")
+        editor.setCursorBufferPosition [0,0]
+        cursor = editor.getCursor()
+        editor.moveCursorToBeginningOfNextParagraph()
+
+        expect(cursor.getBufferPosition()).toEqual [0, 0]
+
+    describe ".moveCursorToBeginningOfPreviousParagraph()", ->
+      it "moves the cursor before the first line of the pevious paragraph", ->
+        editor.setCursorBufferPosition [10,0]
+        cursor = editor.getCursor()
+
+        editor.moveCursorToBeginningOfPreviousParagraph()
+
+        expect(cursor.getBufferPosition()).toEqual  { row : 0, column : 0 }
+
+        editor.setText("")
+        editor.setCursorBufferPosition [0,0]
+        cursor = editor.getCursor()
+        editor.moveCursorToBeginningOfPreviousParagraph()
+
+        expect(cursor.getBufferPosition()).toEqual [0, 0]
+
     describe ".getCurrentParagraphBufferRange()", ->
       it "returns the buffer range of the current paragraph, delimited by blank lines or the beginning / end of the file", ->
         buffer.setText """
@@ -696,7 +728,7 @@ describe "Editor", ->
         editor.manageScrollPosition = true
         editor.setVerticalScrollMargin(2)
         editor.setHorizontalScrollMargin(2)
-        editor.setLineHeight(10)
+        editor.setLineHeightInPixels(10)
         editor.setDefaultCharWidth(10)
         editor.setHorizontalScrollbarHeight(0)
         editor.setHeight(5.5 * 10)
@@ -1135,7 +1167,7 @@ describe "Editor", ->
       describe "when the 'autoscroll' option is true", ->
         it "autoscrolls to the selection", ->
           editor.manageScrollPosition = true
-          editor.setLineHeight(10)
+          editor.setLineHeightInPixels(10)
           editor.setDefaultCharWidth(10)
           editor.setHeight(50)
           editor.setWidth(50)
@@ -1584,6 +1616,13 @@ describe "Editor", ->
         expect(editor.lineForBufferRow(1)).toBe '  '
         expect(editor.lineForBufferRow(2)).toBe '}'
 
+    describe "when a new line is appended before a closing tag (e.g. by pressing enter before a selection)", ->
+      it "moves the line down and keeps the indentation level the same when editor.autoIndent is true", ->
+        atom.config.set('editor.autoIndent', true)
+        editor.setCursorBufferPosition([9,2])
+        editor.insertNewline()
+        expect(editor.lineForBufferRow(10)).toBe '  };'
+        
     describe ".backspace()", ->
       describe "when there is a single cursor", ->
         changeScreenRangeHandler = null
@@ -2844,6 +2883,18 @@ describe "Editor", ->
       expect(editor.lineForBufferRow(4)).toBe "    }"
       expect(editor.lineForBufferRow(5)).toBe "    i=1"
 
+  describe "soft and hard tabs", ->
+    it "resets the tab style when tokenization is complete", ->
+      editor.destroy()
+      atom.project.open('sample-with-tabs-and-leading-comment.coffee').then (o) -> editor = o
+      expect(editor.softTabs).toBe true
+
+      waitsForPromise ->
+        atom.packages.activatePackage('language-coffee-script')
+
+      runs ->
+        expect(editor.softTabs).toBe false
+
   describe ".destroy()", ->
     it "destroys all markers associated with the edit session", ->
       expect(buffer.getMarkerCount()).toBeGreaterThan 0
@@ -3123,7 +3174,7 @@ describe "Editor", ->
   describe ".scrollToCursorPosition()", ->
     it "scrolls the last cursor into view", ->
       editor.setCursorScreenPosition([8, 8])
-      editor.setLineHeight(10)
+      editor.setLineHeightInPixels(10)
       editor.setDefaultCharWidth(10)
       editor.setHeight(50)
       editor.setWidth(50)
@@ -3139,7 +3190,7 @@ describe "Editor", ->
     it "scrolls one screen height up or down", ->
       editor.manageScrollPosition = true
 
-      editor.setLineHeight(10)
+      editor.setLineHeightInPixels(10)
       editor.setHeight(50)
       expect(editor.getScrollHeight()).toBe 130
 

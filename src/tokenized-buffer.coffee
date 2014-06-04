@@ -31,7 +31,9 @@ class TokenizedBuffer extends Model
 
     @on 'grammar-changed grammar-updated', => @resetTokenizedLines()
     @subscribe @buffer, "changed", (e) => @handleBufferChange(e)
-    @subscribe @buffer, "path-changed", => @bufferPath = @buffer.getPath()
+    @subscribe @buffer, "path-changed", =>
+      @bufferPath = @buffer.getPath()
+      @reloadGrammar()
 
     @subscribe @$tabLength.changes, (tabLength) =>
       lastRow = @buffer.getLastRow()
@@ -76,6 +78,7 @@ class TokenizedBuffer extends Model
     @tokenizedLines = @buildPlaceholderTokenizedLinesForRows(0, @buffer.getLastRow())
     @invalidRows = []
     @invalidateRow(0)
+    @fullyTokenized = false
 
   setVisible: (@visible) ->
     @tokenizeInBackground() if @visible
@@ -122,7 +125,11 @@ class TokenizedBuffer extends Model
       @invalidateRow(row + 1) unless filledRegion
       @emit "changed", { start: invalidRow, end: row, delta: 0 }
 
-    @tokenizeInBackground() if @firstInvalidRow()?
+    if @firstInvalidRow()?
+      @tokenizeInBackground()
+    else
+      @emit "tokenized" unless @fullyTokenized
+      @fullyTokenized = true
 
   firstInvalidRow: ->
     @invalidRows[0]

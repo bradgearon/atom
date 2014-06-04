@@ -8,7 +8,7 @@
       { label: 'Open Folder...', command: 'application:open-folder' }
       { label: 'Reopen Last &Item', command: 'pane:reopen-closed-item' }
       { type: 'separator' }
-      { label: '&Preferences...', command: 'application:show-settings' }
+      { label: 'Se&ttings', command: 'application:show-settings' }
       { type: 'separator' }
       { label: '&Save', command: 'core:save' }
       { label: 'Save &As...', command: 'core:save-as' }
@@ -164,11 +164,9 @@
   {
     label: '&Help'
     submenu: [
-      { label: '&About Atom...', command: 'application:about' }
       { label: 'View &Terms of Use', command: 'application:open-terms-of-use' }
       { label: 'View &License', command: 'application:open-license' }
       { label: "VERSION", enabled: false }
-      { label: "Install &update", command: 'application:install-update', visible: false }
       { type: 'separator' }
       { label: '&Documentation', command: 'application:open-documentation' }
       { type: 'separator' }

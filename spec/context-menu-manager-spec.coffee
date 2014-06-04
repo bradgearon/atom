@@ -17,6 +17,22 @@ describe "ContextMenuManager", ->
       expect(contextMenu.definitions['.selector'][0].label).toEqual 'label'
       expect(contextMenu.definitions['.selector'][0].command).toEqual 'command'
 
+    it "loads submenus", ->
+      contextMenu.add 'file-path',
+        '.selector':
+          'parent':
+            'child-1': 'child-1:trigger'
+            'child-2': 'child-2:trigger'
+          'parent-2': 'parent-2:trigger'
+
+      expect(contextMenu.definitions['.selector'].length).toBe 2
+      expect(contextMenu.definitions['.selector'][0].label).toEqual 'parent'
+      expect(contextMenu.definitions['.selector'][0].submenu.length).toBe 2
+      expect(contextMenu.definitions['.selector'][0].submenu[0].label).toBe 'child-1'
+      expect(contextMenu.definitions['.selector'][0].submenu[0].command).toBe 'child-1:trigger'
+      expect(contextMenu.definitions['.selector'][0].submenu[1].label).toBe 'child-2'
+      expect(contextMenu.definitions['.selector'][0].submenu[1].command).toBe 'child-2:trigger'
+
     describe 'dev mode', ->
       it 'loads',  ->
         contextMenu.add 'file-path',
@@ -105,7 +121,7 @@ describe "ContextMenuManager", ->
           expect(menu[2].command).toEqual 'dev-command'
           expect(menu[3]).toBeUndefined()
 
-  describe "#executeBuildHandlers", ->
+  describe "executeBuildHandlers", ->
     menuTemplate = [
         label: 'label'
         executeAtBuild: ->
@@ -119,4 +135,3 @@ describe "ContextMenuManager", ->
 
       expect(buildFn).toHaveBeenCalled()
       expect(buildFn.mostRecentCall.args[0]).toBe event
-
