@@ -1,6 +1,6 @@
 set NODE_ENV=production
-set npm_config_ignore-scripts=true
-call npm install --target=0.11.10 --msvs_version=2010 --msvs_arch=x86
+call npm install --msvs_version=2010 --msvs_arch=x86
+rem call npm rebuild --msvs_version=2010 --msvs_arch=x86
 REM set cacheDir=node_modules
 REM set cacheTarget=npm-cache.7z
 REM set cacheLocation=https://www.dropbox.com/s/6pbuzkl5a61at9y/npm-cache.7z
