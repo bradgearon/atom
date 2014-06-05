@@ -55,6 +55,8 @@ start = ->
     console.log("App load time: #{Date.now() - global.shellStartTime}ms") unless args.test
 
 global.devResourcePath = process.env.ATOM_DEV_RESOURCE_PATH ? path.join(app.getHomeDir(), 'github', 'atom')
+# Normalize to make sure drive letter case is consistent on Windows
+global.devResourcePath = path.normalize(global.devResourcePath) if global.devResourcePath
 
 setupCrashReporter = ->
   crashReporter.start(productName: 'Atom', companyName: 'GitHub')
@@ -108,9 +110,6 @@ parseCommandLine = ->
     fs.statSync resourcePath
   catch
     resourcePath = path.dirname(path.dirname(__dirname))
-
-  # Normalize to make sure drive letter case is consistent on Windows
-  resourcePath = path.normalize(resourcePath) if resourcePath
 
   {resourcePath, pathsToOpen, executedFrom, test, version, pidToKillWhenClosed, devMode, safeMode, newWindow, specDirectory, logFile}
 
